@@ -29,7 +29,7 @@ function testGetSetObject(object) {
 }
 
 function testMockStowState() {
-    var stow = new MockStow('foo');
+    var stow = new JSave.MockStow('foo');
 
     deepEqual(stow.state, {});
 
@@ -83,43 +83,43 @@ function testStorage(stow, storage, stowType) {
 }
 
 test('test exists', function () {
-    ok(!exists(function () {return null}));
-    ok(!exists(function () {return undefined}));
-    ok(!exists(function () {return 1}));
-    ok(!exists(function () {throw "This doesn't work"; return {}}));
+    ok(!JSave.exists(function () {return null}));
+    ok(!JSave.exists(function () {return undefined}));
+    ok(!JSave.exists(function () {return 1}));
+    ok(!JSave.exists(function () {throw "This doesn't work"; return {}}));
 
-    ok(exists(function () {return {}}));
-    ok(exists(function () {return localStorage}));
+    ok(JSave.exists(function () {return {}}));
+    ok(JSave.exists(function () {return localStorage}));
 });
 
 test('test MockStow', function () {
     var name = 'foo';
 
-    ok(MockStow.exists() === true);
-    testGetSetRemove(new MockStow(name));
-    testGetSetObject(new MockStow(name));
+    ok(JSave.MockStow.exists() === true);
+    testGetSetRemove(new JSave.MockStow(name));
+    testGetSetObject(new JSave.MockStow(name));
     testMockStowState();
 });
 
 test('test LocalStow', function () {
     var name = 'foo';
 
-    ok(LocalStow.exists() === true);
-    testGetSetRemove(new LocalStow(name));
-    testGetSetObject(new LocalStow(name));
-    testStorage(new LocalStow(name), localStorage, LocalStow);
+    ok(JSave.LocalStow.exists() === true);
+    testGetSetRemove(new JSave.LocalStow(name));
+    testGetSetObject(new JSave.LocalStow(name));
+    testStorage(new JSave.LocalStow(name), localStorage, JSave.LocalStow);
 });
 
 test('test Cookie', function () {
-    testGetSetRemove(Cookie);
+    testGetSetRemove(JSave.Cookie);
 });
 
 test('test CookieStow', function () {
     var name = 'foo';
 
-    ok(CookieStow.exists() === true);
-    testGetSetRemove(new CookieStow(name));
-    testGetSetObject(new CookieStow(name));
-    testStorage(new CookieStow(name), Cookie, CookieStow);
+    ok(JSave.CookieStow.exists() === true);
+    testGetSetRemove(new JSave.CookieStow(name));
+    testGetSetObject(new JSave.CookieStow(name));
+    testStorage(new JSave.CookieStow(name), JSave.Cookie, JSave.CookieStow);
 });
 
