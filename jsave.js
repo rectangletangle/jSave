@@ -8,7 +8,7 @@ function exists(get) {
         return false;
     }
 
-    var exists = (storage !== null) && (storage !== undefined)
+    var exists = (storage !== null) && (storage !== undefined);
     return exists && (typeof(storage) === 'object' || typeof(storage) === 'string');
 }
 
@@ -25,7 +25,7 @@ Cookie.expires = function (days) {
 
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
 
-    return date
+    return date;
 };
 
 Cookie.getItem = function (key) {
