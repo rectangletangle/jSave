@@ -1,4 +1,5 @@
 
+
 /** Does the storage method exist (cookie or localStorage), and not thow exceptions? */
 function exists(get) {
     try {
@@ -11,214 +12,12 @@ function exists(get) {
     return exists && (typeof(storage) === 'object' || typeof(storage) === 'string');
 }
 
+
 /**
- * This mocks a storage method, and serves as a base for working storage implementations. This isn't abstract, and can
- * be instantiated.
+ * A wrapper around `document.cookie` that makes cookies substantially more pleasant to deal with. This gives cookies
+ * an interface similar to HTML5's `localStorage`.
  */
-function MockStow(name) {
-    this.name = name;
-    this.storage = null;
-    this.state = {};
-}
-
-MockStow.exists = function () {
-    return true;
-};
-
-/** Load the state from storage. */
-MockStow.prototype.load = function () {
-    this.state = {};
-};
-
-/** Store the state. */
-MockStow.prototype.save = function () {};
-
-/** Delete all stored data. */
-MockStow.prototype.clear = function () {
-    this.state = {};
-};
-
-/** Get stored data by its key. */
-MockStow.prototype.getItem = function (key) {
-    return this.state[key];
-};
-
-/** Store data with a key. */
-MockStow.prototype.setItem = function (key, value) {
-    this.state[key] = value;
-};
-
-/** Delete data with a particular key. */
-MockStow.prototype.removeItem = function (key) {
-    delete this.state[key];
-};
-
-
-
-
-
-
-
-
-function AbstractStow(name) {
-    MockStow.call(this, name);
-    this.storage = localStorage;
-}
-
-LocalStow.exists = function () {
-    return exists(function () {return localStorage});
-};
-
-LocalStow.prototype = Object.create(MockStow.prototype);
-LocalStow.prototype.constructor = LocalStow;
-
-LocalStow.prototype.load = function () {
-    var state = this.storage[this.name];
-
-    if (typeof state === 'string') {
-        this.state = JSON.parse(state);
-    } else {
-        this.state = {};
-    }
-};
-
-LocalStow.prototype.save = function () {
-    this.storage[this.name] = JSON.stringify(this.state);
-};
-
-LocalStow.prototype.clear = function () {
-    delete this.storage[this.name];
-    this.state = {};
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function LocalStow(name) {
-    MockStow.call(this, name);
-    this.storage = localStorage;
-}
-
-LocalStow.exists = function () {
-    return exists(function () {return localStorage});
-};
-
-LocalStow.prototype = Object.create(MockStow.prototype);
-LocalStow.prototype.constructor = LocalStow;
-
-LocalStow.prototype.load = function () {
-    var state = this.storage[this.name];
-
-    if (typeof state === 'string') {
-        this.state = JSON.parse(state);
-    } else {
-        this.state = {};
-    }
-};
-
-LocalStow.prototype.save = function () {
-    this.storage[this.name] = JSON.stringify(this.state);
-};
-
-LocalStow.prototype.clear = function () {
-    delete this.storage[this.name];
-    this.state = {};
-};
-
-function CookieStow(name) {
-    MockStow.call(this, name);
-    this.storage = new Cookie();
-}
-
-CookieStow.exists = function () {
-    return exists(function () {return document.cookie});
-};
-
-CookieStow.prototype = Object.create(MockStow.prototype);
-CookieStow.prototype.constructor = CookieStow;
-
-CookieStow.prototype.load = function () {
-    var state = this.storage.getItem(this.name);
-
-    if (typeof state === 'string') {
-        this.state = JSON.parse(state);
-    } else {
-        this.state = {};
-    }
-};
-
-CookieStow.prototype.save = function () {
-    this.storage.setItem(this.name, JSON.stringify(this.state));
-};
-
-CookieStow.prototype.clear = function () {
-    delete this.storage.removeItem(this.name);
-    this.state = {};
-};
-
-/*
-function JSave(name, strategy) {
-}
-
-JSave.prototype.name = function() {
-    return this.storage.name;
-};
-
-JSave.prototype.clear = function() {
-    this.storage[this.name] = undefined;
-};
-
-JSave.prototype.edit = function(callback) {
-    var state = this.storage[this.name] === undefined ? {} : JSON.parse(this.storage[this.name]);
-
-    callback(state);
-
-    this.storage[this.name] = JSON.stringify(state);
-};
-
-JSave.prototype.get = function() {
-    this.storage[this.name] = undefined;
-};
-
-JSave.prototype.set = function() {
-    this.storage[this.name] = undefined;
-};
-
-JSave.prototype.length = function() {
-    this.storage[this.name] = undefined;
-};
-*/
-
 function Cookie() {
-    /** A wrapper around `document.cookie` that makes it substantially more pleasant to deal with. */
-    this.cookie = document.cookie;
 }
 
 Cookie.expires = function (days) {
@@ -229,11 +28,11 @@ Cookie.expires = function (days) {
     return date
 };
 
-Cookie.prototype.getItem = function (key) {
+Cookie.getItem = function (key) {
 
     var assigned = key + '=';
 
-    var splitCookie = this.cookie.split(';');
+    var splitCookie = document.cookie.split(';');
 
     for (var i = 0; i < splitCookie.length; i++) {
 
@@ -246,14 +45,15 @@ Cookie.prototype.getItem = function (key) {
         if (cookie.indexOf(assigned) == 0) {
             var subString = cookie.substring(assigned.length, cookie.length);
 
-            return subString.length ? subString : undefined;
+            return subString.length ? subString : null;
         }
     }
 
-    return undefined;
+    return null;
 };
 
-Cookie.prototype.setItem = function (key, value, expires, path) {
+Cookie.setItem = function (key, value, expires, path) {
+
     if (value !== undefined) {
         if (expires === undefined) {
             var expires = Cookie.expires(365);
@@ -267,27 +67,152 @@ Cookie.prototype.setItem = function (key, value, expires, path) {
         var expiresData = 'expires=' + expires.toString();
         var pathData = 'path=' + path;
 
-        this.cookie = data + ';' + expiresData + ';' + pathData;
+        document.cookie = data + ';' + expiresData + ';' + pathData;
     } else {
         this.removeItem(key);
     }
 };
 
-Cookie.prototype.removeItem = function (key) {
-    this.setItem(key, '', Cookie.expires(-1)); // The cookie expired yesterday.
+Cookie.removeItem = function (key) {
+    this.setItem(key, '');
 };
 
 
+/** An abstract base for storage objects. */
+function AbstractStow(name) {
+    this.name = name;
+    this.storage = null;
+    this.state = {};
+}
+
+AbstractStow.exists = function () {
+    return true;
+};
+
+/** Load the state from storage. */
+AbstractStow.prototype.load = function () {
+    var state = this.storage.getItem(this.name);
+
+    if (typeof state === 'string') {
+        this.state = JSON.parse(state);
+    } else {
+        this.state = {};
+    }
+};
+
+/** Store the state. */
+AbstractStow.prototype.save = function () {
+    this.storage.setItem(this.name, JSON.stringify(this.state));
+};
+
+/** Delete all stored data. */
+AbstractStow.prototype.clear = function () {
+    this.storage.removeItem(this.name);
+    this.state = {};
+};
+
+/** Get stored data by its key. */
+AbstractStow.prototype.getItem = function (key) {
+    var value = this.state[key];
+    return value === undefined ? null : value;
+};
+
+/** Store data with a key. */
+AbstractStow.prototype.setItem = function (key, value) {
+    this.state[key] = value;
+};
+
+/** Delete data with a particular key. */
+AbstractStow.prototype.removeItem = function (key) {
+    delete this.state[key];
+};
 
 
+/** This mocks a storage method; it acts the same as a real storage method, but has no actual persistence mechanism. */
+function MockStow(name) {
+    AbstractStow.call(this, name);
+}
+
+MockStow.prototype = Object.create(AbstractStow.prototype);
+MockStow.prototype.constructor = MockStow;
+
+MockStow.exists = function () {
+    return true;
+};
+
+MockStow.prototype.load = function () {
+    this.state = {};
+};
+
+MockStow.prototype.save = function () {};
+
+MockStow.prototype.clear = function () {
+    this.state = {};
+};
 
 
+/** A storage object which utilizes HTML5's `localStorage` as it's method of persistence. */
+function LocalStow(name) {
+    AbstractStow.call(this, name);
+    this.storage = localStorage;
+}
+
+LocalStow.prototype = Object.create(AbstractStow.prototype);
+LocalStow.prototype.constructor = LocalStow;
+
+LocalStow.exists = function () {
+    return exists(function () {return localStorage});
+};
 
 
+/** A storage object which utilizes cookies as it's method of persistence. */
+function CookieStow(name) {
+    AbstractStow.call(this, name);
+    this.storage = Cookie;
+}
+
+CookieStow.prototype = Object.create(AbstractStow.prototype);
+CookieStow.prototype.constructor = CookieStow;
+
+CookieStow.exists = function () {
+    return exists(function () {return document.cookie});
+};
 
 
+/**
+ * This object functions as an abstraction of several different persistence mechanisms. It has as a single easy to use
+ * interface for cookies and HTML5's `localStorage`. This can also be configured so that any individual persistence
+ * mechanism has a fallback if it doesn't exist or is disabled.
+ */
+function JSave(name, strategy) {
+    this.stow = LocalStow(name);
+}
 
+JSave.prototype.name = function () {
+    return this.stow.name;
+};
 
+JSave.prototype.clear = function () {
+    this.stow.clear();
+};
 
+JSave.prototype.edit = function (callback) {
+    var state = this.storage[this.name] === undefined ? {} : JSON.parse(this.storage[this.name]);
 
+    callback(state);
+
+    this.storage[this.name] = JSON.stringify(state);
+};
+
+JSave.prototype.getItem = function (key) {
+    return this.stow.getItem(key);
+};
+
+JSave.prototype.setItem = function (key, value) {
+    this.stow.setItem(key, value);
+};
+
+JSave.prototype.length = function () {
+    this.storage[this.name] = undefined;
+};
 
