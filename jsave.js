@@ -1,7 +1,7 @@
 /**
- * This library acts as a persistence abstraction layer for client-side JavaScript. This allows the user to store JSON
- * compatible objects using HTML5's `localStorage` or cookies. This facilitates robust client-side storage, using
- * `localStorage` as the preferred mechanism while utilizing cookies as a fallback.
+ * This library acts as a persistence abstraction layer for client-side JavaScript. This allows for the persistent
+ * storage of JSON compatible objects using HTML5's `localStorage` or cookies with a single interface. This facilitates
+ * robust client-side storage, using `localStorage` as the preferred mechanism while utilizing cookies as a fallback.
  */
 
 
@@ -47,6 +47,21 @@ jSave._works = function (storage) {
 
     return true;
 };
+
+/** This takes an array of strategies and returns the first one that works. If nothing works it returns `null`. */
+jSave._fallback = function (strategy) {
+    if (!Array.isArray(strategy)) {
+        strategy = [strategy];
+    }
+
+    for (var i = 0; i < strategy.length; i++) {
+        if (strategy[i].works()) {
+            return strategy[i];
+        }
+    }
+
+    return null;
+}
 
 /**
  * A wrapper around `document.cookie` that makes cookies substantially more pleasant to deal with. This gives cookies
@@ -216,42 +231,34 @@ jSave.CookieStow.works = function () {
 
 /**
  * This object functions as an abstraction of several different persistence mechanisms. It has as a single easy to use
- * interface for cookies and HTML5's `localStorage`. This can also be configured so that any individual persistence
- * mechanism has a fallback if it doesn't exist or is disabled.
+ * interface for cookies and HTML5's `localStorage`. By default it's configured so that if `localStorage` isn't present
+ * or is disabled, it falls back to using cookies, and if that doesn't work it uses a mockup (so things upstream don't
+ * break).
  */
 jSave.JSave = function (name, strategy) {
     if (strategy === undefined) {
         strategy = [jSave.LocalStow, jSave.CookieStow];
     }
 
-    if (!Array.isArray(strategy)) {
-        strategy = [strategy];
-    }
+    var stowType = jSave._fallback(strategy);
 
-    for (var i = 0; i < strategy.length; i++) {
-        if (strategy[i].works()) {
-            var stowType = strategy[i];
-            break;
-        }
-    }
-
-    try {
+    if (stowType === null) {
+        this.stow = new jSave.MockStow(name); // Storage works, even if it isn't really persistent.
+    } else {
         this.stow = new stowType(name);
-    } catch (exc) {
-        this.stow = new jSave.MockStow(name);
     }
-}
 
-jSave.JSave.prototype.getName = function () {
-    return this.stow.name;
-};
+    Object.defineProperty(this, 'state', {'get': function() {return this.stow.state}});
+    Object.defineProperty(this, 'name', {'get': function() {return this.stow.name},
+                                         'set': function(value) {this.stow.name = value}});
+}
 
 jSave.JSave.prototype.load = function () {
     this.stow.load();
 };
 
 jSave.JSave.prototype.save = function () {
-    this.stow.load();
+    this.stow.save();
 };
 
 jSave.JSave.prototype.clear = function () {
@@ -266,11 +273,9 @@ jSave.JSave.prototype.setItem = function (key, value) {
     this.stow.setItem(key, value);
 };
 
-/** Set the value for a key, if the key's value is currently undefined. */
+/** Set the value for a key, if the key's value is currently `null`. */
 jSave.JSave.prototype.setDefault = function (key, value) {
-    var value = this.stow.getItem(key);
-
-    if (value === undefined) {
+    if (this.stow.getItem(key) === null) {
         this.stow.setItem(key, value);
     }
 };

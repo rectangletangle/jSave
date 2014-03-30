@@ -31,6 +31,24 @@ function testGetSetObject(object) {
     ok(object.getItem('foo') === null);
 }
 
+function testSetDefault(object) {
+    ok(object.getItem('a') === null);
+
+    object.setDefault('a', 0)
+    ok(object.getItem('a') === 0);
+
+    object.setDefault('a', 1)
+    ok(object.getItem('a') === 0);
+
+    object.setItem('a', undefined)
+    object.setDefault('a', 1)
+    ok(object.getItem('a') === 1);
+
+    object.setItem('a', null)
+    object.setDefault('a', 2)
+    ok(object.getItem('a') === 2);
+}
+
 function testMockStowState() {
     var stow = new jSave.MockStow('foo');
 
@@ -110,6 +128,31 @@ test('test works', function () {
     ok(!jSave._works(mockStorage));
 });
 
+test('test fallback', function () {
+
+    var doesWork = {'works': function () {return true}}
+    var doesntWork = {'works': function () {return false}}
+
+    ok(jSave._fallback(doesntWork) === null);
+    ok(jSave._fallback([doesntWork, doesntWork]) === null);
+    ok(jSave._fallback([]) === null);
+
+    var a = Object.create(doesWork);
+    a.name = 'a'
+
+    ok(jSave._fallback(a).name === 'a');
+    ok(jSave._fallback([a, doesntWork]).name === 'a');
+    ok(jSave._fallback([doesntWork, a]).name === 'a');
+
+    var b = Object.create(doesWork);
+    b.name = 'b'
+
+    ok(jSave._fallback([a, b]).name === 'a');
+    ok(jSave._fallback([b, a]).name === 'b');
+    ok(jSave._fallback([doesntWork, b, a]).name === 'b');
+    ok(jSave._fallback([doesntWork, doesntWork, a]).name === 'a');
+});
+
 test('test MockStow', function () {
     var name = 'foo';
 
@@ -139,5 +182,23 @@ test('test CookieStow', function () {
     testGetSetRemove(new jSave.CookieStow(name));
     testGetSetObject(new jSave.CookieStow(name));
     testStorage(new jSave.CookieStow(name), jSave.Cookie, jSave.CookieStow);
+});
+
+test('test JSave', function () {
+    var name = 'foo';
+
+    ok(new jSave.JSave(name).name === 'foo');
+
+    var strategies = [jSave.LocalStow, jSave.CookieStow, [], undefined];
+
+    for (var i = 0; i < strategies.length; i++) {
+        testGetSetRemove(new jSave.JSave(name, strategies[i]));
+        testGetSetObject(new jSave.JSave(name, strategies[i]));
+        testSetDefault(new jSave.JSave(name, strategies[i]));
+    }
+
+    testStorage(new jSave.JSave(name), localStorage, jSave.JSave);
+    testStorage(new jSave.JSave(name, jSave.LocalStow), localStorage, jSave.JSave);
+    testStorage(new jSave.JSave(name, jSave.CookieStow), jSave.Cookie, jSave.JSave);
 });
 
