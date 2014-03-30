@@ -1,8 +1,14 @@
+/**
+ * This library acts as a persistence abstraction layer for client-side JavaScript. This allows the user to store JSON
+ * compatible objects using HTML5's `localStorage` or cookies. This facilitates robust client-side storage, using
+ * `localStorage` as the preferred mechanism while utilizing cookies as a fallback.
+ */
 
-JSave = {};
+
+jSave = {};
 
 /** Does the storage method exist (cookie or localStorage), and not thow exceptions? */
-JSave.exists = function (get) {
+jSave._exists = function (get) {
     try {
         var storage = get();
     } catch (exc) {
@@ -14,18 +20,42 @@ JSave.exists = function (get) {
 };
 
 /** Runtime verification that the storage works. */
-JSave.works = function (storage) {
-    // todo:
+jSave._works = function (storage) {
+    try {
+        storage.setItem('a', '0')
+        storage.setItem('b', '1')
+        if (storage.getItem('a') !== '0') {
+            return false;
+        }
+
+        storage.removeItem('a')
+        if (storage.getItem('a') !== null && storage.getItem('a') !== undefined) {
+            return false;
+        }
+
+        if (storage.getItem('b') !== '1') {
+            return false;
+        }
+
+        storage.removeItem('b')
+        if (storage.getItem('b') !== null && storage.getItem('b') !== undefined) {
+            return false;
+        }
+    } catch (exc) {
+        return false;
+    }
+
+    return true;
 };
 
 /**
  * A wrapper around `document.cookie` that makes cookies substantially more pleasant to deal with. This gives cookies
  * an interface similar to HTML5's `localStorage`.
  */
-JSave.Cookie = function () {
+jSave.Cookie = function () {
 };
 
-JSave.Cookie.expires = function (days) {
+jSave.Cookie.expires = function (days) {
     var date = new Date();
 
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -33,7 +63,7 @@ JSave.Cookie.expires = function (days) {
     return date;
 };
 
-JSave.Cookie.getItem = function (key) {
+jSave.Cookie.getItem = function (key) {
 
     var assigned = key + '=';
 
@@ -57,11 +87,11 @@ JSave.Cookie.getItem = function (key) {
     return null;
 };
 
-JSave.Cookie.setItem = function (key, value, expires, path) {
+jSave.Cookie.setItem = function (key, value, expires, path) {
 
     if (value !== undefined) {
         if (expires === undefined) {
-            var expires = JSave.Cookie.expires(365);
+            var expires = jSave.Cookie.expires(365);
         }
 
         if (path === undefined) {
@@ -78,24 +108,24 @@ JSave.Cookie.setItem = function (key, value, expires, path) {
     }
 };
 
-JSave.Cookie.removeItem = function (key) {
+jSave.Cookie.removeItem = function (key) {
     this.setItem(key, '');
 };
 
 
 /** An abstract base for storage objects. */
-JSave.AbstractStow = function (name) {
+jSave.AbstractStow = function (name) {
     this.name = name;
     this.storage = null;
     this.state = {};
 };
 
-JSave.AbstractStow.exists = function () {
+jSave.AbstractStow.works = function () {
     return true;
 };
 
 /** Load the state from storage. */
-JSave.AbstractStow.prototype.load = function () {
+jSave.AbstractStow.prototype.load = function () {
     var state = this.storage.getItem(this.name);
 
     if (typeof state === 'string') {
@@ -106,81 +136,81 @@ JSave.AbstractStow.prototype.load = function () {
 };
 
 /** Store the state. */
-JSave.AbstractStow.prototype.save = function () {
+jSave.AbstractStow.prototype.save = function () {
     this.storage.setItem(this.name, JSON.stringify(this.state));
 };
 
 /** Delete all stored data. */
-JSave.AbstractStow.prototype.clear = function () {
+jSave.AbstractStow.prototype.clear = function () {
     this.storage.removeItem(this.name);
     this.state = {};
 };
 
 /** Get stored data by its key. */
-JSave.AbstractStow.prototype.getItem = function (key) {
+jSave.AbstractStow.prototype.getItem = function (key) {
     var value = this.state[key];
     return value === undefined ? null : value;
 };
 
 /** Store data with a key. */
-JSave.AbstractStow.prototype.setItem = function (key, value) {
+jSave.AbstractStow.prototype.setItem = function (key, value) {
     this.state[key] = value;
 };
 
 /** Delete data with a particular key. */
-JSave.AbstractStow.prototype.removeItem = function (key) {
+jSave.AbstractStow.prototype.removeItem = function (key) {
     delete this.state[key];
 };
 
 
 /** This mocks a storage method; it acts the same as a real storage method, but has no actual persistence mechanism. */
-JSave.MockStow = function (name) {
-    JSave.AbstractStow.call(this, name);
+jSave.MockStow = function (name) {
+    jSave.AbstractStow.call(this, name);
 };
 
-JSave.MockStow.prototype = Object.create(JSave.AbstractStow.prototype);
-JSave.MockStow.prototype.constructor = JSave.MockStow;
+jSave.MockStow.prototype = Object.create(jSave.AbstractStow.prototype);
+jSave.MockStow.prototype.constructor = jSave.MockStow;
 
-JSave.MockStow.exists = function () {
+jSave.MockStow.works = function () {
     return true;
 };
 
-JSave.MockStow.prototype.load = function () {
+jSave.MockStow.prototype.load = function () {
     this.state = {};
 };
 
-JSave.MockStow.prototype.save = function () {};
+jSave.MockStow.prototype.save = function () {};
 
-JSave.MockStow.prototype.clear = function () {
+jSave.MockStow.prototype.clear = function () {
     this.state = {};
 };
 
 
 /** A storage object which utilizes HTML5's `localStorage` as it's method of persistence. */
-JSave.LocalStow = function (name) {
-    JSave.AbstractStow.call(this, name);
+jSave.LocalStow = function (name) {
+    jSave.AbstractStow.call(this, name);
     this.storage = localStorage;
 };
 
-JSave.LocalStow.prototype = Object.create(JSave.AbstractStow.prototype);
-JSave.LocalStow.prototype.constructor = JSave.LocalStow;
+jSave.LocalStow.prototype = Object.create(jSave.AbstractStow.prototype);
+jSave.LocalStow.prototype.constructor = jSave.LocalStow;
 
-JSave.LocalStow.exists = function () {
-    return JSave.exists(function () {return localStorage});
+jSave.LocalStow.works = function () {
+    return jSave._exists(function () {return localStorage}) ? jSave._works(localStorage) : false;
 };
 
 
 /** A storage object which utilizes cookies as it's method of persistence. */
-JSave.CookieStow = function (name) {
-    JSave.AbstractStow.call(this, name);
-    this.storage = JSave.Cookie;
+jSave.CookieStow = function (name) {
+    jSave.AbstractStow.call(this, name);
+    this.storage = jSave.Cookie;
 }
 
-JSave.CookieStow.prototype = Object.create(JSave.AbstractStow.prototype);
-JSave.CookieStow.prototype.constructor = JSave.CookieStow;
+jSave.CookieStow.prototype = Object.create(jSave.AbstractStow.prototype);
+jSave.CookieStow.prototype.constructor = jSave.CookieStow;
 
-JSave.CookieStow.exists = function () {
-    return JSave.exists(function () {return document.cookie});
+jSave.CookieStow.works = function () {
+    return jSave._exists(function () {return document.cookie}) ? jSave._works(jSave.Cookie) : false;
 };
 
 
@@ -189,35 +219,63 @@ JSave.CookieStow.exists = function () {
  * interface for cookies and HTML5's `localStorage`. This can also be configured so that any individual persistence
  * mechanism has a fallback if it doesn't exist or is disabled.
  */
-JSave.JSave = function (name, strategy) {
-    this.stow = new JSave.LocalStow(name);
+jSave.JSave = function (name, strategy) {
+    if (strategy === undefined) {
+        strategy = [jSave.LocalStow, jSave.CookieStow];
+    }
+
+    if (!Array.isArray(strategy)) {
+        strategy = [strategy];
+    }
+
+    for (var i = 0; i < strategy.length; i++) {
+        if (strategy[i].works()) {
+            var stowType = strategy[i];
+            break;
+        }
+    }
+
+    try {
+        this.stow = new stowType(name);
+    } catch (exc) {
+        this.stow = new jSave.MockStow(name);
+    }
 }
 
-JSave.JSave.prototype.name = function () {
+jSave.JSave.prototype.getName = function () {
     return this.stow.name;
 };
 
-JSave.JSave.prototype.clear = function () {
+jSave.JSave.prototype.load = function () {
+    this.stow.load();
+};
+
+jSave.JSave.prototype.save = function () {
+    this.stow.load();
+};
+
+jSave.JSave.prototype.clear = function () {
     this.stow.clear();
 };
 
-JSave.JSave.prototype.edit = function (callback) {
-    var state = this.storage[this.name] === undefined ? {} : JSON.parse(this.storage[this.name]);
-
-    callback(state);
-
-    this.storage[this.name] = JSON.stringify(state);
-};
-
-JSave.JSave.prototype.getItem = function (key) {
+jSave.JSave.prototype.getItem = function (key) {
     return this.stow.getItem(key);
 };
 
-JSave.JSave.prototype.setItem = function (key, value) {
+jSave.JSave.prototype.setItem = function (key, value) {
     this.stow.setItem(key, value);
 };
 
-JSave.JSave.prototype.removeItem = function (key) {
+/** Set the value for a key, if the key's value is currently undefined. */
+jSave.JSave.prototype.setDefault = function (key, value) {
+    var value = this.stow.getItem(key);
+
+    if (value === undefined) {
+        this.stow.setItem(key, value);
+    }
+};
+
+jSave.JSave.prototype.removeItem = function (key) {
     this.stow.removeItem(key);
 };
 

@@ -32,7 +32,7 @@ function testGetSetObject(object) {
 }
 
 function testMockStowState() {
-    var stow = new JSave.MockStow('foo');
+    var stow = new jSave.MockStow('foo');
 
     deepEqual(stow.state, {});
 
@@ -54,6 +54,7 @@ function testMockStowState() {
 };
 
 function testStorage(stow, storage, stowType) {
+    storage.setItem('bazz', 'f');
     storage.removeItem('foo');
 
     deepEqual(stow.state, {});
@@ -83,46 +84,60 @@ function testStorage(stow, storage, stowType) {
     ok(storage.getItem('foo') === null);
     ok(storage.getItem('bar') === 'a');
     deepEqual(JSON.parse(storage.getItem('baz')), {'qux': 312});
+    ok(storage.getItem('bazz') === 'f');
 }
 
 test('test exists', function () {
-    ok(!JSave.exists(function () {return null}));
-    ok(!JSave.exists(function () {return undefined}));
-    ok(!JSave.exists(function () {return 1}));
-    ok(!JSave.exists(function () {throw "This doesn't work"; return {}}));
+    ok(!jSave._exists(function () {return null}));
+    ok(!jSave._exists(function () {return undefined}));
+    ok(!jSave._exists(function () {return 1}));
+    ok(!jSave._exists(function () {throw "This doesn't work"; return {}}));
 
-    ok(JSave.exists(function () {return {}}));
-    ok(JSave.exists(function () {return localStorage}));
+    ok(jSave._exists(function () {return {}}));
+    ok(jSave._exists(function () {return localStorage}));
+});
+
+test('test works', function () {
+    var mockStorage = {'getItem': function (key) {return this[key]},
+                       'setItem': function (key, value) {this[key] = value},
+                       'removeItem': function (key) {delete this[key]}}
+    ok(jSave._works(mockStorage));
+
+    mockStorage['getItem'] = function () {};
+    ok(!jSave._works(mockStorage));
+
+    mockStorage['getItem'] = function () {throw 'foo'};
+    ok(!jSave._works(mockStorage));
 });
 
 test('test MockStow', function () {
     var name = 'foo';
 
-    ok(JSave.MockStow.exists() === true);
-    testGetSetRemove(new JSave.MockStow(name));
-    testGetSetObject(new JSave.MockStow(name));
+    ok(jSave.MockStow.works() === true);
+    testGetSetRemove(new jSave.MockStow(name));
+    testGetSetObject(new jSave.MockStow(name));
     testMockStowState();
 });
 
 test('test LocalStow', function () {
     var name = 'foo';
 
-    ok(JSave.LocalStow.exists() === true);
-    testGetSetRemove(new JSave.LocalStow(name));
-    testGetSetObject(new JSave.LocalStow(name));
-    testStorage(new JSave.LocalStow(name), localStorage, JSave.LocalStow);
+    ok(jSave.LocalStow.works() === true);
+    testGetSetRemove(new jSave.LocalStow(name));
+    testGetSetObject(new jSave.LocalStow(name));
+    testStorage(new jSave.LocalStow(name), localStorage, jSave.LocalStow);
 });
 
 test('test Cookie', function () {
-    testGetSetRemove(JSave.Cookie);
+    testGetSetRemove(jSave.Cookie);
 });
 
 test('test CookieStow', function () {
     var name = 'foo';
 
-    ok(JSave.CookieStow.exists() === true);
-    testGetSetRemove(new JSave.CookieStow(name));
-    testGetSetObject(new JSave.CookieStow(name));
-    testStorage(new JSave.CookieStow(name), JSave.Cookie, JSave.CookieStow);
+    ok(jSave.CookieStow.works() === true);
+    testGetSetRemove(new jSave.CookieStow(name));
+    testGetSetObject(new jSave.CookieStow(name));
+    testStorage(new jSave.CookieStow(name), jSave.Cookie, jSave.CookieStow);
 });
 
