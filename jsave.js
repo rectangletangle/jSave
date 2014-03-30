@@ -190,7 +190,7 @@ JSave.CookieStow.exists = function () {
  * mechanism has a fallback if it doesn't exist or is disabled.
  */
 JSave.JSave = function (name, strategy) {
-    this.stow = JSave.LocalStow(name);
+    this.stow = new JSave.LocalStow(name);
 }
 
 JSave.JSave.prototype.name = function () {

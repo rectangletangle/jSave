@@ -26,6 +26,9 @@ function testGetSetObject(object) {
 
     object.setItem('foo', null);
     ok(object.getItem('foo') === null);
+
+    object.setItem('foo', undefined);
+    ok(object.getItem('foo') === null);
 }
 
 function testMockStowState() {
