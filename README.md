@@ -1,17 +1,17 @@
 jSave
 ======
 This library acts as a persistence abstraction layer for client-side
-JavaScript. This allows for the persistent storage of JSON compatible objects
-using HTML5's `localStorage` or cookies, using a single interface. This
-facilitates robust client-side storage, using `localStorage` as the preferred
-mechanism while utilizing cookies as a fallback.
+JavaScript. Any JSON compatible object can be persisted using either HTML5's
+`localStorage` or cookies. This facilitates robust client-side storage using
+`localStorage` as the preferred mechanism, then seamlessly falling back to
+cookies if that doesn't work.
 
 ## Usage:
 This demo rotates through the colors red, blue, and green using `localStorage`
-for persistence. If that doesn't work, it gracefully falls back to using
-cookies for persistence. Although only strings are stored in this demo, any
-JSON compatible object can be stored. The calls to `JSON.parse` and
-`JSON.stringify` are done automatically.
+for persistence. If that doesn't work, it gracefully falls back to cookies.
+Although only strings are stored in this demo, any JSON compatible object can
+be stored. The calls to `JSON.parse` and `JSON.stringify` are done
+automatically.
 
 ```html
 <!doctype html>
