@@ -1,17 +1,3 @@
-jSave
-======
-This library acts as a persistence abstraction layer for client-side
-JavaScript. This allows for the persistent storage of JSON compatible objects
-using HTML5's `localStorage` or cookies, using a single interface. This
-facilitates robust client-side storage, using `localStorage` as the preferred
-mechanism while utilizing cookies as a fallback.
-
-## Usage:
-This demo rotates through the colors red, blue, and green using `localStorage`
-for persistence. If that doesn't work it gracefully falls back to using cookies
-for persistence.
-
-```html5
 <!doctype html>
 
 <html>
@@ -25,6 +11,10 @@ for persistence.
         <div id="someDiv" style='width:200px;height:200px;'></div>
 
         <script>
+            /* This rotates through the colors red, blue, and green using
+               `localStorage` for persistence. If that doesn't work it
+               gracefully falls back to using cookies for persistence. */
+
             someDiv = document.getElementById('someDiv');
 
             // The name `divColor` corresponds to a `localStorage` key.
@@ -49,7 +39,3 @@ for persistence.
         </script>
     </body>
 </html>
-```
-
-## Dependencies:
-* QUnit (only for testing)

@@ -280,6 +280,17 @@ jSave.JSave.prototype.setDefault = function (key, value) {
     }
 };
 
+/** Get the value for a key, or a default value. */
+jSave.JSave.prototype.getDefault = function (key, defaultValue) {
+    var value = this.getItem(key);
+
+    if (value === null || value === undefined) {
+        return defaultValue;
+    } else {
+        return value;
+    }
+}
+
 jSave.JSave.prototype.removeItem = function (key) {
     this.stow.removeItem(key);
 };

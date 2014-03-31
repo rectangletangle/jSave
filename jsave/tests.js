@@ -31,11 +31,14 @@ function testGetSetObject(object) {
     ok(object.getItem('foo') === null);
 }
 
-function testSetDefault(object) {
+function testDefault(object) {
     ok(object.getItem('a') === null);
+
+    ok(object.getDefault('a', 43) === 43);
 
     object.setDefault('a', 0)
     ok(object.getItem('a') === 0);
+    ok(object.getDefault('a', 43) === 0);
 
     object.setDefault('a', 1)
     ok(object.getItem('a') === 0);
@@ -194,7 +197,7 @@ test('test JSave', function () {
     for (var i = 0; i < strategies.length; i++) {
         testGetSetRemove(new jSave.JSave(name, strategies[i]));
         testGetSetObject(new jSave.JSave(name, strategies[i]));
-        testSetDefault(new jSave.JSave(name, strategies[i]));
+        testDefault(new jSave.JSave(name, strategies[i]));
     }
 
     testStorage(new jSave.JSave(name), localStorage, jSave.JSave);
