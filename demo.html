@@ -11,15 +11,13 @@
         <div id="someDiv" style='width:200px;height:200px;'></div>
 
         <script>
-            /* This rotates through the colors red, blue, and green using
-               `localStorage` for persistence. If that doesn't work it
-               gracefully falls back to using cookies for persistence. */
-
             someDiv = document.getElementById('someDiv');
 
             // The name `divColor` corresponds to a `localStorage` key.
             state = new jSave.JSave('divColor');
 
+            /* Load persisted data into the current state (this destroys any 
+               unsaved changes to the state). */
             state.load();
 
             color = state.getDefault('color', 'blue');
@@ -35,7 +33,11 @@
             someDiv.style.backgroundColor = color;
 
             state.setItem('color', color);
+            
+            /* This persists the state, so it can be used when the page is 
+               reloaded. */
             state.save();
+            
         </script>
     </body>
 </html>
