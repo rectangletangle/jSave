@@ -8,8 +8,10 @@ mechanism while utilizing cookies as a fallback.
 
 ## Usage:
 This demo rotates through the colors red, blue, and green using `localStorage`
-for persistence. If that doesn't work it gracefully falls back to using cookies
-for persistence.
+for persistence. If that doesn't work, it gracefully falls back to using
+cookies for persistence. Although only strings are stored in this demo, any
+JSON compatible object can be stored. The calls to `JSON.parse` and
+`JSON.stringify` are done automatically.
 
 ```html
 <!doctype html>
