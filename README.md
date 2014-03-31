@@ -32,6 +32,8 @@ automatically.
             // The name `divColor` corresponds to a `localStorage` key.
             state = new jSave.JSave('divColor');
 
+            /* Load persisted data into the current state (this destroys any 
+               unsaved changes to the state). */
             state.load();
 
             color = state.getDefault('color', 'blue');
@@ -47,7 +49,11 @@ automatically.
             someDiv.style.backgroundColor = color;
 
             state.setItem('color', color);
+            
+            /* This persists the state, so it can be used when the page is 
+               reloaded. */
             state.save();
+            
         </script>
     </body>
 </html>
