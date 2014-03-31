@@ -11,7 +11,7 @@ This demo rotates through the colors red, blue, and green using `localStorage`
 for persistence. If that doesn't work it gracefully falls back to using cookies
 for persistence.
 
-```html5
+```html
 <!doctype html>
 
 <html>
